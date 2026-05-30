@@ -254,6 +254,29 @@ h1{font-family:'Unbounded',sans-serif;font-size:30px;line-height:1.05;font-weigh
   </section>
 </div>
 
+
+  <!-- ОПЛАТА -->
+  <section class="screen" id="payment">
+    <div class="hero" style="height:140px">
+      <div style="font-size:64px;animation:float 4s ease-in-out infinite">💳</div>
+    </div>
+    <h1 style="font-size:24px">Оплата</h1>
+    <p class="lead" id="payDesc"></p>
+    <div class="card" style="margin-bottom:18px">
+      <div class="status-top">
+        <div>
+          <div class="status-date" id="payAmount"></div>
+          <div class="status-sub">переводом на ЮMoney</div>
+        </div>
+        <div class="dev-pill">🔒 безопасно</div>
+      </div>
+    </div>
+    <div class="stack">
+      <button class="btn btn-primary" id="payBtn" onclick="openPayment()">💳 Перейти к оплате</button>
+      <button class="btn btn-ghost" id="checkBtn" onclick="checkPayment()" style="display:none">🔄 Проверить оплату</button>
+      <button class="back" onclick="go('buy')">← Назад</button>
+    </div>
+  </section>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -261,7 +284,7 @@ h1{font-family:'Unbounded',sans-serif;font-size:30px;line-height:1.05;font-weigh
    НАСТРОЙКА: ВПИШИ СЮДА АДРЕС СВОЕГО API (туннель cloudflared)
    Пример: const API = "https://abc-def.trycloudflare.com";
    =========================================================== */
-const API = "https://lou-emily-chances-sharon.trycloudflare.com";
+const API = "PASTE_YOUR_TUNNEL_URL_HERE";
 
 const tg = window.Telegram?.WebApp;
 let STATE = { plans: [], devices: 1, plan: "6m", max: 5, sub: null, subUrl: null };
@@ -392,14 +415,41 @@ function showGuide(os){
 async function buyNow(){
   haptic();
   const plan=STATE.plans.find(p=>p.code===STATE.plan);
+  if(!plan) return;
   try{
-    const d=await api('/api/order',{initData:tg?.initData||"",plan_code:STATE.plan,devices:STATE.devices});
-    if(!d.ok)throw new Error(d.error);
-    STATE.subUrl=d.sub_url; STATE.sub={expire_at:d.expire_at,devices:d.devices,sub_url:d.sub_url};
-    el('doneDate').textContent=fmtDate(d.expire_at);
-    el('doneLink').textContent=d.sub_url;
-    applyState(); go('done');
-  }catch(e){toast('Ошибка оформления')}
+    const d=await api('/api/create_payment',{initData:tg?.initData||"",plan_code:STATE.plan,devices:STATE.devices});
+    if(!d.ok) throw new Error(d.error);
+    STATE.pendingLabel=d.label;
+    el('payDesc').textContent=plan.title+' · '+STATE.devices+' устр.';
+    el('payAmount').textContent=money(d.amount);
+    el('payBtn').style.display='flex';
+    el('checkBtn').style.display='none';
+    STATE.payUrl=d.url;
+    go('payment');
+  }catch(e){toast('Ошибка создания платежа')}
+}
+
+function openPayment(){
+  if(STATE.payUrl){
+    window.open(STATE.payUrl,'_blank');
+    setTimeout(()=>{el('checkBtn').style.display='flex';},2000);
+  }
+}
+
+async function checkPayment(){
+  haptic();
+  toast('Проверяем оплату…');
+  try{
+    const d=await api('/api/check_payment',{initData:tg?.initData||"",label:STATE.pendingLabel});
+    if(d.paid){
+      STATE.sub=d.subscription; STATE.subUrl=d.subscription?.sub_url;
+      el('doneDate').textContent=fmtDate(d.subscription.expire_at);
+      el('doneLink').textContent=d.subscription.sub_url;
+      applyState(); go('done');
+    } else {
+      toast('Оплата ещё не поступила — попробуй чуть позже');
+    }
+  }catch(e){toast('Ошибка проверки')}
 }
 function openSub(){if(STATE.subUrl){el('doneDate').textContent=fmtDate(STATE.sub.expire_at);
   el('doneLink').textContent=STATE.subUrl;go('done')}}
