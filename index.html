@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LUISTVPN</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a1410;
+  --bg2:#0f1d17;
+  --card:#15281f;
+  --card2:#1a3127;
+  --line:#234436;
+  --accent:#15c474;
+  --accent2:#0e9f5e;
+  --accent-glow:rgba(21,196,116,.35);
+  --txt:#eafaf2;
+  --muted:#7fa593;
+  --radius:20px;
+  --r-sm:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:'Manrope',system-ui,sans-serif;
+  background:
+    radial-gradient(120% 80% at 50% -10%, #1c3b2c 0%, transparent 55%),
+    radial-gradient(100% 60% at 50% 120%, #103325 0%, transparent 50%),
+    var(--bg);
+  color:var(--txt);
+  min-height:100vh;
+  overflow-x:hidden;
+  padding:0 18px 28px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:520px;margin:0 auto}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;padding:18px 2px 8px}
+.brand{font-family:'Unbounded',sans-serif;font-weight:800;font-size:19px;letter-spacing:.5px}
+.brand b{color:var(--accent)}
+.top .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent-glow)}
+.pill{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);
+  padding:7px 12px;border-radius:30px;font-size:12.5px;color:var(--muted);font-weight:600}
+
+/* screens */
+.screen{display:none;animation:fade .35s ease}
+.screen.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* shield hero */
+.hero{position:relative;height:230px;display:flex;align-items:center;justify-content:center;margin-top:6px}
+.rings{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.ring{position:absolute;border:1px solid var(--line);border-radius:50%;opacity:.5}
+.ring.r1{width:130px;height:130px}.ring.r2{width:190px;height:190px;opacity:.35}
+.ring.r3{width:250px;height:250px;opacity:.2}
+.shield{width:96px;height:112px;position:relative;z-index:2;filter:drop-shadow(0 10px 30px var(--accent-glow));
+  animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.shield svg{width:100%;height:100%}
+
+/* status card */
+.card{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);
+  border-radius:var(--radius);padding:18px}
+.status-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:4px}
+.status-date{font-family:'Unbounded',sans-serif;font-weight:700;font-size:21px}
+.status-sub{color:var(--muted);font-size:13px;font-weight:600;margin-top:3px}
+.status-sub .on{color:var(--accent)}
+.dev-pill{background:#0c1c14;border:1px solid var(--line);padding:8px 12px;border-radius:30px;
+  font-size:13px;font-weight:700;display:flex;gap:6px;align-items:center;white-space:nowrap}
+
+h1{font-family:'Unbounded',sans-serif;font-size:30px;line-height:1.05;font-weight:800;margin:18px 0 8px}
+.lead{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:20px;font-weight:500}
+
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;border:none;cursor:pointer;
+  font-family:'Manrope',sans-serif;font-weight:800;font-size:15.5px;border-radius:var(--radius);
+  padding:17px;color:#04140c;transition:transform .12s, filter .2s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 8px 26px -6px var(--accent-glow)}
+.btn-ghost{background:#0c1c14;border:1px solid var(--line);color:var(--txt);font-weight:700}
+.btn-row{display:flex;justify-content:space-between;align-items:center;width:100%}
+.btn-row .price{font-weight:800}
+.btn-row .price s{opacity:.5;font-weight:600;margin-left:8px;font-size:13px}
+.stack{display:flex;flex-direction:column;gap:11px;margin-top:18px}
+
+/* device selector */
+.section-lbl{color:var(--muted);font-size:13px;font-weight:700;margin:22px 2px 11px;text-transform:uppercase;letter-spacing:.5px}
+.dev-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.dev-head{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;margin-bottom:16px}
+.dev-head .ic{width:30px;height:30px;border-radius:9px;background:var(--accent);display:flex;align-items:center;
+  justify-content:center;color:#04140c;font-size:15px}
+.dev-count{margin-left:auto;font-family:'Unbounded',sans-serif;font-weight:700;font-size:18px;color:var(--accent)}
+.dots{display:flex;gap:0;align-items:center;position:relative;padding:6px 0}
+.dot-track{position:absolute;left:11px;right:11px;height:3px;background:var(--line);top:50%;transform:translateY(-50%);border-radius:3px}
+.dot-fill{position:absolute;left:11px;height:3px;background:var(--accent);top:50%;transform:translateY(-50%);
+  border-radius:3px;transition:width .25s;box-shadow:0 0 8px var(--accent-glow)}
+.dot{position:relative;z-index:2;flex:1;display:flex;justify-content:center}
+.dot i{width:22px;height:22px;border-radius:50%;background:#0c1c14;border:2px solid var(--line);
+  display:block;cursor:pointer;transition:.2s}
+.dot.on i{background:var(--accent);border-color:var(--accent);box-shadow:0 0 10px var(--accent-glow)}
+.dot.first.on i{transform:scale(1.15)}
+
+/* tariff grid */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
+.tariff{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r-sm);padding:15px 14px;
+  cursor:pointer;position:relative;transition:.18s}
+.tariff:active{transform:scale(.98)}
+.tariff.sel{border-color:var(--accent);background:var(--card2);box-shadow:0 0 0 3px rgba(21,196,116,.12)}
+.tariff .name{font-size:13px;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:5px}
+.tariff .big{font-family:'Unbounded',sans-serif;font-weight:700;font-size:23px;margin:9px 0 2px}
+.tariff .pm{font-size:11.5px;color:var(--muted);font-weight:600}
+.tariff .star{color:var(--accent)}
+
+/* success */
+.linkbox{background:#0c1c14;border:1px dashed var(--line);border-radius:var(--r-sm);padding:14px;
+  font-size:12px;word-break:break-all;color:var(--muted);font-weight:600;line-height:1.5}
+
+/* instructions */
+.os-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:14px}
+.os{background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);padding:18px 16px;cursor:pointer;transition:.18s}
+.os:active{transform:scale(.98)}
+.os .glyph{font-size:26px;margin-bottom:10px}
+.os .t1{color:var(--muted);font-size:12px;font-weight:600}
+.os .t2{font-weight:800;font-size:15px}
+.steps{margin-top:16px}
+.step{display:flex;gap:13px;padding:13px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border:none}
+.step .n{min-width:26px;height:26px;border-radius:50%;background:var(--accent);color:#04140c;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.step .tx{font-size:14px;line-height:1.45;font-weight:500;padding-top:2px}
+.back{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-weight:700;font-size:14px;
+  background:none;border:none;cursor:pointer;padding:8px 0;margin-top:6px}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(80px);background:var(--accent);
+  color:#04140c;font-weight:800;padding:13px 22px;border-radius:30px;font-size:14px;transition:.3s;z-index:50;
+  box-shadow:0 10px 30px -6px var(--accent-glow)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.center{text-align:center;padding:40px 0;color:var(--muted);font-weight:600}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;
+  margin:0 auto 14px;animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">LUIST<b>VPN</b></div>
+    <div class="pill"><span class="dot"></span> защищено</div>
+  </div>
+
+  <!-- ЗАГРУЗКА -->
+  <div id="loading" class="center">
+    <div class="spin"></div>
+    Загрузка…
+  </div>
+
+  <!-- ГЛАВНАЯ -->
+  <section class="screen" id="home">
+    <div class="hero">
+      <div class="rings"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div></div>
+      <div class="shield">
+        <svg viewBox="0 0 96 112" fill="none">
+          <path d="M48 4 8 20v34c0 28 21 46 40 54 19-8 40-26 40-54V20L48 4z"
+            fill="url(#g)" stroke="var(--accent)" stroke-width="2.5"/>
+          <path d="M34 56l10 10 20-22" stroke="#04140c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs><linearGradient id="g" x1="48" y1="4" x2="48" y2="108">
+            <stop stop-color="#1ddc83"/><stop offset="1" stop-color="#0c8a52"/></linearGradient></defs>
+        </svg>
+      </div>
+    </div>
+
+    <div class="card" id="statusCard">
+      <div class="status-top">
+        <div>
+          <div class="status-date" id="stDate">—</div>
+          <div class="status-sub" id="stSub"><span class="on">online</span> · безлимит</div>
+        </div>
+        <div class="dev-pill">📱 <span id="stDev">1</span> устр.</div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <button class="btn btn-primary" onclick="go('buy')" id="mainBtn">
+        <span class="btn-row"><span>🛒 Купить подписку</span><span class="price" id="mainPrice"></span></span>
+      </button>
+      <button class="btn btn-ghost" onclick="openSub()" id="cfgBtn" style="display:none">🔑 Мой конфиг для Happ</button>
+      <button class="btn btn-ghost" onclick="go('instr')">🛠 Установка и настройка</button>
+    </div>
+  </section>
+
+  <!-- ПОКУПКА -->
+  <section class="screen" id="buy">
+    <h1>Покупка<br>подписки</h1>
+    <p class="lead">Подключай больше устройств и пользуйся сервисом вместе с друзьями и близкими.</p>
+
+    <div class="dev-card">
+      <div class="dev-head">
+        <span class="ic">⚡</span> Количество устройств
+        <span class="dev-count" id="devCount">1</span>
+      </div>
+      <div class="dots" id="dots"></div>
+    </div>
+
+    <div class="grid" id="tariffs"></div>
+
+    <div class="stack">
+      <button class="btn btn-primary" onclick="buyNow()">
+        <span class="btn-row"><span>Оплатить подписку</span><span class="price" id="payPrice"></span></span>
+      </button>
+      <button class="back" onclick="go('home')">← Назад</button>
+    </div>
+  </section>
+
+  <!-- УСПЕХ -->
+  <section class="screen" id="done">
+    <div class="hero" style="height:170px">
+      <div class="shield" style="width:74px;height:86px"><svg viewBox="0 0 96 112" fill="none">
+        <path d="M48 4 8 20v34c0 28 21 46 40 54 19-8 40-26 40-54V20L48 4z" fill="url(#g2)" stroke="var(--accent)" stroke-width="2.5"/>
+        <path d="M34 56l10 10 20-22" stroke="#04140c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <defs><linearGradient id="g2" x1="48" y1="4" x2="48" y2="108"><stop stop-color="#1ddc83"/><stop offset="1" stop-color="#0c8a52"/></linearGradient></defs>
+      </svg></div>
+    </div>
+    <h1 style="font-size:25px">Подписка<br>оформлена 🎉</h1>
+    <p class="lead">Действует до <b id="doneDate" style="color:var(--txt)"></b>. Ниже — ссылка для приложения Happ.</p>
+    <div class="section-lbl">Ссылка-подписка</div>
+    <div class="linkbox" id="doneLink"></div>
+    <div class="stack">
+      <button class="btn btn-primary" onclick="openInHapp()">📲 Открыть в Happ</button>
+      <button class="btn btn-ghost" onclick="copyLink()">📋 Скопировать ссылку</button>
+      <button class="btn btn-ghost" onclick="go('instr')">🛠 Как подключить</button>
+      <button class="back" onclick="go('home')">← На главную</button>
+    </div>
+  </section>
+
+  <!-- ИНСТРУКЦИИ -->
+  <section class="screen" id="instr">
+    <h1 style="font-size:25px">Установка</h1>
+    <p class="lead">Выбери платформу — покажем, как подключить конфиг в Happ.</p>
+    <div class="os-grid" id="osGrid"></div>
+    <button class="back" onclick="go('home')">← Назад</button>
+  </section>
+
+  <!-- ШАГИ УСТАНОВКИ -->
+  <section class="screen" id="guide">
+    <h1 style="font-size:24px" id="guideTitle"></h1>
+    <div class="steps" id="guideSteps"></div>
+    <button class="back" onclick="go('instr')">← К платформам</button>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===========================================================
+   НАСТРОЙКА: ВПИШИ СЮДА АДРЕС СВОЕГО API (туннель cloudflared)
+   Пример: const API = "https://abc-def.trycloudflare.com";
+   =========================================================== */
+const API = "PASTE_YOUR_TUNNEL_URL_HERE";
+
+const tg = window.Telegram?.WebApp;
+let STATE = { plans: [], devices: 1, plan: "6m", max: 5, sub: null, subUrl: null };
+
+const HAPP = {
+  ios:{glyph:"",t:"iOS",store:"App Store"},
+  android:{glyph:"🤖",t:"Android",store:"Google Play"},
+  macos:{glyph:"💻",t:"macOS",store:"Mac App Store"},
+  windows:{glyph:"🪟",t:"Windows",store:"GitHub / Store"}
+};
+
+function el(id){return document.getElementById(id)}
+function go(s){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  el(s).classList.add('active');window.scrollTo(0,0);
+  if(tg){tg.BackButton[s==='home'?'hide':'show']();}}
+function toast(t){const e=el('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),1800);}
+function haptic(){try{tg.HapticFeedback.impactOccurred('light')}catch(e){}}
+function money(n){return n.toLocaleString('ru-RU')+' ₽'}
+
+async function api(path,body){
+  const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body)});
+  if(!r.ok)throw new Error('http '+r.status);
+  return r.json();
+}
+
+async function init(){
+  if(tg){tg.ready();tg.expand();try{tg.setHeaderColor('#0a1410');tg.setBackgroundColor('#0a1410')}catch(e){}
+    tg.BackButton.onClick(()=>{const cur=document.querySelector('.screen.active').id;
+      go(cur==='guide'?'instr':'home')});}
+  if(API.includes('PASTE_YOUR_TUNNEL')){
+    el('loading').innerHTML='⚠️ Не задан адрес API.<br>Впиши URL туннеля в начало index.html (переменная API).';
+    return;
+  }
+  try{
+    const initData = tg?.initData || "";
+    const d = await api('/api/init',{initData});
+    if(!d.ok)throw new Error(d.error||'init failed');
+    STATE.plans=d.plans; STATE.max=d.max_devices; STATE.sub=d.subscription;
+    buildDots(); buildTariffs(); buildOs(); applyState();
+    el('loading').style.display='none'; go('home');
+  }catch(e){
+    el('loading').innerHTML='Не удалось связаться с сервером.<br><span style="font-size:12px">'+
+      'Проверь, что бот и туннель запущены, а адрес API верный.</span>';
+  }
+}
+
+function applyState(){
+  const s=STATE.sub;
+  if(s){
+    el('stDate').textContent='до '+fmtDate(s.expire_at);
+    el('stDev').textContent=s.devices;
+    el('mainBtn').querySelector('span span').textContent='🌐 Продлить подписку';
+    el('cfgBtn').style.display='flex';
+    STATE.subUrl=s.sub_url;
+  }else{
+    el('stDate').textContent='нет подписки';
+    el('stSub').innerHTML='оформи за пару минут';
+  }
+  updatePrices();
+}
+function fmtDate(iso){const d=new Date(iso);return d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'})}
+
+function buildDots(){
+  const box=el('dots');box.innerHTML='<div class="dot-track"></div><div class="dot-fill" id="dotFill"></div>';
+  for(let i=1;i<=STATE.max;i++){
+    const d=document.createElement('div');d.className='dot'+(i===1?' first':'');
+    d.innerHTML='<i></i>';d.onclick=()=>{STATE.devices=i;haptic();renderDots();updatePrices()};
+    box.appendChild(d);
+  }
+  renderDots();
+}
+function renderDots(){
+  const dots=el('dots').querySelectorAll('.dot');
+  dots.forEach((d,idx)=>d.classList.toggle('on',idx<STATE.devices));
+  const pct=STATE.max>1?(STATE.devices-1)/(STATE.max-1)*100:0;
+  el('dotFill').style.width=pct+'%';
+  el('devCount').textContent=STATE.devices;
+}
+function buildTariffs(){
+  const box=el('tariffs');box.innerHTML='';
+  STATE.plans.forEach(p=>{
+    const c=document.createElement('div');c.className='tariff'+(p.code===STATE.plan?' sel':'');
+    c.dataset.code=p.code;
+    c.innerHTML=`<div class="name">${p.title}${p.badge?' <span class="star">★</span>':''}</div>
+      <div class="big" data-price></div><div class="pm" data-pm></div>`;
+    c.onclick=()=>{STATE.plan=p.code;haptic();buildTariffs()};
+    box.appendChild(c);
+  });
+  updatePrices();
+}
+function updatePrices(){
+  document.querySelectorAll('#tariffs .tariff').forEach(c=>{
+    const p=STATE.plans.find(x=>x.code===c.dataset.code);
+    c.querySelector('[data-price]').textContent=money(p.price*STATE.devices);
+    c.querySelector('[data-pm]').textContent=Math.round(p.per_month)+' ₽/мес';
+  });
+  const plan=STATE.plans.find(p=>p.code===STATE.plan);
+  if(plan){
+    const total=plan.price*STATE.devices;
+    el('payPrice').innerHTML=money(total)+(plan.old_price?` <s>${money(plan.old_price*STATE.devices)}</s>`:'');
+    el('mainPrice').textContent='от '+money(STATE.plans[0].price);
+  }
+}
+function buildOs(){
+  const box=el('osGrid');box.innerHTML='';
+  Object.entries(HAPP).forEach(([k,v])=>{
+    const o=document.createElement('div');o.className='os';
+    o.innerHTML=`<div class="glyph">${v.glyph||'🍏'}</div><div class="t1">Инструкция</div><div class="t2">для ${v.t}</div>`;
+    o.onclick=()=>{haptic();showGuide(k)};
+    box.appendChild(o);
+  });
+}
+function showGuide(os){
+  const v=HAPP[os];
+  el('guideTitle').textContent='Установка · '+v.t;
+  const steps=[
+    `Установи приложение <b>Happ</b> из ${v.store}.`,
+    `Вернись сюда и нажми «Мой конфиг для Happ» — ссылка скопируется.`,
+    `В Happ нажми «+» → «Добавить из буфера обмена».`,
+    `Обнови подписку, выбери сервер и нажми «Подключить» 🟢`
+  ];
+  el('guideSteps').innerHTML=steps.map((s,i)=>
+    `<div class="step"><div class="n">${i+1}</div><div class="tx">${s}</div></div>`).join('');
+  go('guide');
+}
+
+async function buyNow(){
+  haptic();
+  const plan=STATE.plans.find(p=>p.code===STATE.plan);
+  try{
+    const d=await api('/api/order',{initData:tg?.initData||"",plan_code:STATE.plan,devices:STATE.devices});
+    if(!d.ok)throw new Error(d.error);
+    STATE.subUrl=d.sub_url; STATE.sub={expire_at:d.expire_at,devices:d.devices,sub_url:d.sub_url};
+    el('doneDate').textContent=fmtDate(d.expire_at);
+    el('doneLink').textContent=d.sub_url;
+    applyState(); go('done');
+  }catch(e){toast('Ошибка оформления')}
+}
+function openSub(){if(STATE.subUrl){el('doneDate').textContent=fmtDate(STATE.sub.expire_at);
+  el('doneLink').textContent=STATE.subUrl;go('done')}}
+function copyLink(){navigator.clipboard?.writeText(STATE.subUrl).then(()=>toast('Скопировано ✓')).catch(()=>toast('Скопируй вручную'))}
+function openInHapp(){if(STATE.subUrl){window.location.href='happ://add/'+encodeURIComponent(STATE.subUrl);
+  setTimeout(()=>toast('Если Happ не открылся — скопируй ссылку'),800)}}
+
+init();
+</script>
+</body>
+</html>
